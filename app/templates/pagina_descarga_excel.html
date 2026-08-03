@@ -11,26 +11,22 @@
   <link rel="stylesheet" href="{% static 'css/descarga.css' %}">
 </head>
 
-<body>
-  <div class="container px-3" style="min-height:100vh; display:flex; align-items:center; justify-content:center;">
-    <div class="row justify-content-center w-100">
-      <div class="col-12 col-md-9 col-lg-7">
-        <div class="card hero-card p-4 text-center">
-          <span class="glow-line gl1"></span>
-          <span class="glow-line gl2"></span>
-          <div class="brand-bar mb-2"><span class="brand-pill"><img src="{% static 'img/logo-calidad.svg' %}" alt="Nakama">NAKAMA • Descargas</span></div>
-          <h2 class="title-gradient">Panel de Descarga de Asistencia</h2>
-          <p class="helper-text">Solo usuarios administradores pueden acceder a esta página.</p>
+<body class="download-page">
+  <div class="download-wrapper">
+    <div class="card hero-card p-4 text-center">
+      <span class="glow-line gl1"></span>
+      <span class="glow-line gl2"></span>
+      <div class="brand-bar mb-3"><span class="brand-pill"><img src="{% static 'img/logo-calidad.svg' %}" alt="Nakama">NAKAMA • Descargas</span></div>
+      <h2 class="title-gradient">Panel de Descarga de Asistencia</h2>
+      <p class="helper-text">Solo usuarios administradores pueden acceder a esta página.</p>
 
-          <div class="d-grid gap-3 mt-4">
-            <a href="{% url 'descargar_excel' %}" class="btn btn-success btn-lg">
-              Descargar Excel de Asistencias (semanal 29 jun - 31 jul)
-            </a>
-            <a href="{% url 'resumen_excel' %}" class="btn btn-success btn-lg">
-              Descargar Excel de Resumen de Asistencias
-            </a>
-          </div>
-        </div>
+      <div class="d-grid gap-3 mt-4">
+        <a href="{% url 'descargar_excel' %}" class="btn btn-warning btn-lg">
+          Descargar Excel de Asistencias (semanal 29 jun - 31 jul)
+        </a>
+        <a href="{% url 'resumen_excel' %}" class="btn btn-warning btn-lg">
+          Descargar Excel de Resumen de Asistencias
+        </a>
       </div>
     </div>
   </div>
