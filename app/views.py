@@ -32,6 +32,19 @@ def _sanitize_sheet_title(title):
     return clean_title[:31]
 
 
+def _sanitize_table_name(name):
+    valid_chars = []
+    for c in name:
+        if c.isalnum() or c == '_':
+            valid_chars.append(c)
+        else:
+            valid_chars.append('_')
+    clean_name = ''.join(valid_chars)
+    if not clean_name or not (clean_name[0].isalpha() or clean_name[0] == '_'):
+        clean_name = 'T' + clean_name
+    return clean_name[:31]
+
+
 @user_passes_test(es_staff)
 def pagina_descarga_excel(request):
     return render(request, 'pagina_descarga_excel.html')
@@ -179,7 +192,7 @@ def exportar_asistencia_excel(request):
 
         if ws.max_row > 4:
             tabla = Table(
-                displayName=f"Tabla{sheet_title}",
+                displayName=_sanitize_table_name(f"Tabla_{sheet_title}"),
                 ref=f"A4:J{ws.max_row}"
             )
             style = TableStyleInfo(
