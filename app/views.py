@@ -143,7 +143,6 @@ def exportar_asistencia_excel(request):
     wb = openpyxl.Workbook()
     empleados = Empleado.objects.order_by('apellidos', 'nombres')
     existing_titles = set()
-    existing_table_names = set()
 
     for index, empleado in enumerate(empleados):
         if index == 0:
@@ -155,8 +154,11 @@ def exportar_asistencia_excel(request):
         existing_titles.add(sheet_title)
         ws.title = sheet_title
 
-        ws.append(["Empleado", empleado.nombre_completo])
-        ws.append([f"Rango de fechas: {fecha_inicio.strftime('%d/%m/%Y')} - {fecha_fin.strftime('%d/%m/%Y')}"])
+        ws.append(["REGISTRO DE ASISTENCIA"] + [""] * 8)
+        ws.append([f"Empleado: {empleado.nombre_completo}"] + [""] * 8)
+        ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=9)
+        ws.append([f"Periodo: {fecha_inicio.strftime('%d/%m/%Y')} - {fecha_fin.strftime('%d/%m/%Y')}"] + [""] * 8)
+        ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=9)
         ws.append([])
 
         encabezados = [
@@ -168,19 +170,21 @@ def exportar_asistencia_excel(request):
 
         for semana_num, semana_inicio in enumerate(semanas, start=1):
             semana_fin = semana_inicio + timedelta(days=4)
-            ws.append([f"Semana {semana_num} ({semana_inicio.strftime('%d/%m/%Y')} - {semana_fin.strftime('%d/%m/%Y')})"])
+            week_title = f"Semana {semana_num} ({semana_inicio.strftime('%d/%m/%Y')} - {semana_fin.strftime('%d/%m/%Y')})"
+            ws.append([week_title] + [""] * 8)
+            ws.merge_cells(start_row=ws.max_row, start_column=1, end_row=ws.max_row, end_column=9)
             ws.append(encabezados)
 
             for dia_offset in range(5):
                 fecha_dia = semana_inicio + timedelta(days=dia_offset)
                 fecha_str = fecha_dia.strftime('%d/%m/%Y')
                 if fecha_dia < fecha_inicio or fecha_dia > fecha_fin:
-                    ws.append([fecha_str, '', '', '', '', '', '', '', ''])
+                    ws.append([fecha_str] + [''] * 8)
                     continue
 
                 datos_dia = registros_por_semana.get(semana_inicio, {}).get(fecha_dia)
                 if not datos_dia:
-                    ws.append([fecha_str, '', '', '', '', '', '', '', ''])
+                    ws.append([fecha_str] + [''] * 8)
                     continue
 
                 ws.append([
@@ -203,15 +207,44 @@ def exportar_asistencia_excel(request):
 
         header_font = Font(bold=True, color="FFFFFF")
         header_fill = PatternFill("solid", fgColor="4F81BD")
+        title_fill = PatternFill("solid", fgColor="1F3B8D")
         thin_border = Border(
             left=Side(style='thin'), right=Side(style='thin'),
             top=Side(style='thin'), bottom=Side(style='thin')
         )
 
-        for cell in ws[4]:
-            cell.font = header_font
-            cell.fill = header_fill
-            cell.border = thin_border
+        ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=9)
+
+        for row in ws.iter_rows(min_row=1, max_row=ws.max_row, max_col=9):
+            first_cell = row[0].value
+            if first_cell == 'REGISTRO DE ASISTENCIA':
+                row[0].font = Font(bold=True, color='FFFFFF', size=14)
+                row[0].fill = title_fill
+                row[0].alignment = openpyxl.styles.Alignment(horizontal='center', vertical='center')
+            if first_cell and str(first_cell).startswith('Empleado:'):
+                row[0].font = Font(bold=True)
+                row[0].alignment = openpyxl.styles.Alignment(horizontal='left', vertical='center')
+            if first_cell and str(first_cell).startswith('Periodo:'):
+                row[0].font = Font(bold=True)
+                row[0].alignment = openpyxl.styles.Alignment(horizontal='left', vertical='center')
+            if first_cell and str(first_cell).startswith('Semana '):
+                row[0].font = Font(bold=True, color='FFFFFF')
+                row[0].fill = header_fill
+                row[0].alignment = openpyxl.styles.Alignment(horizontal='left', vertical='center')
+            if first_cell == 'Fecha':
+                for cell in row:
+                    cell.font = header_font
+                    cell.fill = header_fill
+                    cell.border = thin_border
+                    cell.alignment = openpyxl.styles.Alignment(horizontal='center', vertical='center')
+            if row[0].row in (2, 3):
+                for cell in row:
+                    cell.border = thin_border
+
+        for row in ws.iter_rows(min_row=1, max_row=ws.max_row, max_col=9):
+            for cell in row:
+                if cell.border is None:
+                    cell.border = thin_border
 
         # Do not add an Excel table here because employee sheets contain multiple weekly sections
         # with repeated headers and blank rows. A single table requires one contiguous header row.
