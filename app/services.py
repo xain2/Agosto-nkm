@@ -219,6 +219,11 @@ class ReporteService:
         return []
 
     @staticmethod
+    def obtener_hora_tipo(data, tipo):
+        tiempos = ReporteService._get_times(data, tipo)
+        return tiempos[0].strftime('%H:%M') if tiempos else ''
+
+    @staticmethod
     def formatear_dia_asistencia(data):
         if not data:
             return ''
