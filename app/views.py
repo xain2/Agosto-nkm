@@ -104,7 +104,7 @@ def exportar_resumen_excel(request):
         ws.column_dimensions[col[0].column_letter].width = max_length + 2
 
     header_font = Font(bold=True, color="FFFFFF")
-    header_fill = PatternFill("solid", fgColor="4F81BD")
+    header_fill = PatternFill("solid", fgColor="0F1D87")
     thin_border = Border(
         left=Side(style='thin'), right=Side(style='thin'),
         top=Side(style='thin'), bottom=Side(style='thin')
@@ -160,8 +160,6 @@ def exportar_asistencia_excel(request):
         ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=9)
         ws.append(["Nombre completo:", empleado.nombre_completo] + [""] * 7)
         ws.merge_cells(start_row=2, start_column=2, end_row=2, end_column=9)
-        ws.append(["Rango de fechas:", f"{fecha_inicio.strftime('%d/%m/%Y')} - {fecha_fin.strftime('%d/%m/%Y')}"] + [""] * 7)
-        ws.merge_cells(start_row=3, start_column=2, end_row=3, end_column=9)
         ws.append([])
 
         encabezados = [
@@ -218,8 +216,8 @@ def exportar_asistencia_excel(request):
             ws.column_dimensions[column_letter].width = max_length + 2
 
         header_font = Font(bold=True, color="FFFFFF")
-        header_fill = PatternFill("solid", fgColor="4F81BD")
-        title_fill = PatternFill("solid", fgColor="1F3B8D")
+        header_fill = PatternFill("solid", fgColor="0F1D87")
+        title_fill = PatternFill("solid", fgColor="0F1D87")
         thin_border = Border(
             left=Side(style='thin'), right=Side(style='thin'),
             top=Side(style='thin'), bottom=Side(style='thin')
@@ -230,30 +228,18 @@ def exportar_asistencia_excel(request):
             if first_cell == 'REGISTRO DE ASISTENCIA':
                 row[0].font = Font(bold=True, color='FFFFFF', size=12)
                 row[0].fill = title_fill
-                row[0].alignment = openpyxl.styles.Alignment(horizontal='left', vertical='center')
-                for cell in row:
-                    cell.border = thin_border
-            if first_cell == 'Nombre completo:' or first_cell == 'Rango de fechas:':
+            if first_cell == 'Nombre completo:':
                 row[0].font = Font(bold=True)
-                row[0].alignment = openpyxl.styles.Alignment(horizontal='left', vertical='center')
-                for cell in row:
-                    cell.border = thin_border
             if first_cell and str(first_cell).startswith('Semana '):
                 row[0].font = Font(bold=True, color='FFFFFF')
                 row[0].fill = header_fill
-                row[0].alignment = openpyxl.styles.Alignment(horizontal='left', vertical='center')
-                for cell in row:
-                    cell.border = thin_border
             if first_cell == 'Fecha':
                 for cell in row:
                     cell.font = header_font
                     cell.fill = header_fill
-                    cell.border = thin_border
-                    cell.alignment = openpyxl.styles.Alignment(horizontal='center', vertical='center')
-            if row[0].row in (1, 2, 3, 5):
-                for cell in row:
-                    if cell.value is not None:
-                        cell.border = thin_border
+            for cell in row:
+                cell.alignment = openpyxl.styles.Alignment(horizontal='center', vertical='center')
+                cell.border = thin_border
 
         for row in ws.iter_rows(min_row=1, max_row=ws.max_row, max_col=9):
             for cell in row:
