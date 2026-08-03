@@ -204,9 +204,18 @@ def exportar_asistencia_excel(request):
 
             ws.append([])
 
+        from openpyxl.utils import get_column_letter
+
         for col in ws.columns:
-            max_length = max(len(str(cell.value)) for cell in col if cell.value)
-            ws.column_dimensions[col[0].column_letter].width = max_length + 2
+            max_length = max((len(str(cell.value)) for cell in col if cell.value), default=0)
+            if max_length == 0:
+                max_length = 0
+            first_cell = col[0]
+            column_index = getattr(first_cell, 'column', None)
+            if column_index is None:
+                continue
+            column_letter = get_column_letter(column_index)
+            ws.column_dimensions[column_letter].width = max_length + 2
 
         header_font = Font(bold=True, color="FFFFFF")
         header_fill = PatternFill("solid", fgColor="4F81BD")
