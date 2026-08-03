@@ -216,7 +216,8 @@ def exportar_asistencia_excel(request):
             ws.column_dimensions[column_letter].width = max_length + 2
 
         header_font = Font(bold=True, color="FFFFFF")
-        header_fill = PatternFill("solid", fgColor="0F1D87")
+        week_title_fill = PatternFill("solid", fgColor="0F1D87")
+        column_header_fill = PatternFill("solid", fgColor="4F81BD")
         title_fill = PatternFill("solid", fgColor="0F1D87")
         thin_border = Border(
             left=Side(style='thin'), right=Side(style='thin'),
@@ -232,11 +233,11 @@ def exportar_asistencia_excel(request):
                 row[0].font = Font(bold=True)
             if first_cell and str(first_cell).startswith('Semana '):
                 row[0].font = Font(bold=True, color='FFFFFF')
-                row[0].fill = header_fill
+                row[0].fill = week_title_fill
             if first_cell == 'Fecha':
                 for cell in row:
                     cell.font = header_font
-                    cell.fill = header_fill
+                    cell.fill = column_header_fill
             for cell in row:
                 cell.alignment = openpyxl.styles.Alignment(horizontal='center', vertical='center')
                 cell.border = thin_border
