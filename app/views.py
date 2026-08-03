@@ -24,7 +24,9 @@ import json
 
 
 def es_staff(user):
-    return user.is_authenticated and user.is_staff
+    if not hasattr(user, 'is_authenticated'):
+        return False
+    return bool(user.is_authenticated and getattr(user, 'is_staff', False))
 
 
 def _sanitize_sheet_title(title):
