@@ -16,6 +16,7 @@ from .controllers import (
     desvincular_fingerprint_api,
 )
 import openpyxl
+import string
 from datetime import date, timedelta
 from openpyxl.styles import Font, PatternFill, Border, Side
 from openpyxl.worksheet.table import Table, TableStyleInfo
@@ -35,7 +36,7 @@ def _sanitize_sheet_title(title):
 def _sanitize_table_name(name):
     valid_chars = []
     for c in name:
-        if c.isalnum() or c == '_':
+        if c in string.ascii_letters or c in string.digits or c == '_':
             valid_chars.append(c)
         else:
             valid_chars.append('_')
@@ -43,6 +44,25 @@ def _sanitize_table_name(name):
     if not clean_name or not (clean_name[0].isalpha() or clean_name[0] == '_'):
         clean_name = 'T' + clean_name
     return clean_name[:31]
+
+
+def _make_unique_name(base, existing, max_length=31):
+    if base not in existing:
+        return base
+
+    suffix = 1
+    while True:
+        suffix_str = f"_{suffix}"
+        truncated_base = base[:max_length - len(suffix_str)]
+        candidate = f"{truncated_base}{suffix_str}"
+        if candidate not in existing:
+            return candidate
+        suffix += 1
+
+
+def _make_unique_sheet_title(title, existing_titles, max_length=31):
+    title = _sanitize_sheet_title(title)
+    return _make_unique_name(title, existing_titles, max_length)
 
 
 @user_passes_test(es_staff)
@@ -122,6 +142,8 @@ def exportar_asistencia_excel(request):
 
     wb = openpyxl.Workbook()
     empleados = Empleado.objects.order_by('apellidos', 'nombres')
+    existing_titles = set()
+    existing_table_names = set()
 
     for index, empleado in enumerate(empleados):
         if index == 0:
@@ -129,7 +151,8 @@ def exportar_asistencia_excel(request):
         else:
             ws = wb.create_sheet()
 
-        sheet_title = _sanitize_sheet_title(empleado.nombre_completo)
+        sheet_title = _make_unique_sheet_title(empleado.nombre_completo, existing_titles)
+        existing_titles.add(sheet_title)
         ws.title = sheet_title
 
         ws.append(["Empleado", empleado.nombre_completo])
@@ -190,17 +213,9 @@ def exportar_asistencia_excel(request):
             cell.fill = header_fill
             cell.border = thin_border
 
-        if ws.max_row > 4:
-            tabla = Table(
-                displayName=_sanitize_table_name(f"Tabla_{sheet_title}"),
-                ref=f"A4:J{ws.max_row}"
-            )
-            style = TableStyleInfo(
-                name="TableStyleMedium9", showFirstColumn=False,
-                showLastColumn=False, showRowStripes=True, showColumnStripes=False
-            )
-            tabla.tableStyleInfo = style
-            ws.add_table(tabla)
+        # Do not add an Excel table here because employee sheets contain multiple weekly sections
+        # with repeated headers and blank rows. A single table requires one contiguous header row.
+        pass
 
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
